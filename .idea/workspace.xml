@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="81992e73-8b7e-4bb6-bc86-fc46413fe374" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/init/init.sh" beforeDir="false" afterPath="$PROJECT_DIR$/init/init.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proxy/proxyDockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/proxyDockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/serviceA/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/serviceDockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/serviceA/serviceADockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yamls/pod.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/yamls/serviceA.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,9 +49,10 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="789" y="125" key="SettingsEditor" timestamp="1605486712993">
-      <screen x="0" y="23" width="2560" height="1349" />
+    <state x="0" y="23" key="SettingsEditor" timestamp="1605564928269">
+      <screen x="0" y="23" width="1440" height="809" />
     </state>
+    <state x="0" y="23" key="SettingsEditor/0.23.1440.809@0.23.1440.809" timestamp="1605564928269" />
     <state x="789" y="125" key="SettingsEditor/0.23.2560.1349@0.23.2560.1349" timestamp="1605486712993" />
   </component>
 </project>

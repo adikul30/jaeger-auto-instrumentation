@@ -1,0 +1,12 @@
+#docker run -d -p 6831:6831/udp -p 16686:16686 jaegertracing/all-in-one:latest
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jaeger-all-in-one
+  labels:
+    app: jaegerall
+spec:
+  containers:
+    - name: jaegercontainer
+      image: jaegertracing/all-in-one:latest

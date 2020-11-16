@@ -2,35 +2,142 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"time"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/uber/jaeger-client-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
+	"github.com/uber/jaeger-lib/metrics"
 	"io"
+	"net/http"
+	"os"
+	"time"
 )
 
 const (
 	proxyPort   = 8000
 	servicePort = 80
+	serviceName = "SVC_NAME"
+)
+
+var (
+	tracer opentracing.Tracer
+	cfg jaegercfg.Configuration
 )
 
 // Create a structure to define the proxy functionality.
 type Proxy struct{}
 
-func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// Forward the HTTP request to the destination service.
-	res, duration, err := p.forwardRequest(req)
+func contains(s []string, val string) bool {
+	for _, v := range s {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
 
-	// Notify the client if there was an error while forwarding the request.
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
+func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	cfg = jaegercfg.Configuration{
+		ServiceName: os.Getenv(serviceName),
+		Sampler:     &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter:    &jaegercfg.ReporterConfig{
+			LogSpans: true,
+		},
 	}
 
-	// If the request was forwarded successfully, write the response back to
-	// the client.
-	p.writeResponse(w, res)
+	jLogger := jaegerlog.StdLogger
+	jMetricsFactory := metrics.NullFactory
 
-	// Print request and response statistics.
-	p.printStats(req, res, duration)
+	// Initialize tracer with a logger and a metrics factory
+	tracer, closer, _ := cfg.NewTracer(
+		jaegercfg.Logger(jLogger),
+		jaegercfg.Metrics(jMetricsFactory),
+	)
+	// Set the singleton opentracing.Tracer with the Jaeger tracer.
+	opentracing.SetGlobalTracer(tracer)
+	defer closer.Close()
+
+	tracer = opentracing.GlobalTracer()
+
+	// Forward the HTTP request to the destination serviceA.
+
+	//TODO : check for existing jaeger tracer headers. if they exist, forward the request. If they don't, add headers
+	// serviceA name has to be unique for diff services
+	fmt.Println("********************")
+	for name, headers := range req.Header {
+		for _, h := range headers {
+			fmt.Printf("%v: %v\n", name, h)
+		}
+	}
+	values, ok := req.Header["Svc_name"]
+	if ok {
+		fmt.Println("service_name: " + os.Getenv(serviceName))
+		if contains(values, os.Getenv(serviceName)) {
+			fmt.Println("originating from here ...")
+			// originating from the host serviceA
+			//todo: add jaeger params
+			fmt.Println("this should be here: " + os.Getenv(serviceName))
+			clientSpan := tracer.StartSpan("svc-A")
+			ext.SpanKindRPCClient.Set(clientSpan)
+			ext.HTTPUrl.Set(clientSpan, req.URL.String())
+			ext.HTTPMethod.Set(clientSpan, "GET")
+			defer clientSpan.Finish()
+			tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+
+			res, duration, err := p.performOutboundRequest(req)
+			// Notify the client if there was an error while forwarding the request.
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadGateway)
+				return
+			}
+
+			// If the request was forwarded successfully, write the response back to
+			// the client.
+			p.writeResponse(w, res)
+
+			// Print request and response statistics.
+			p.printStats(req, res, duration)
+
+		} else {
+			// originating from other services
+			fmt.Println("originating from other services ...")
+			//todo: extract jaeger params
+			spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+			serverSpan := tracer.StartSpan("svc-B", ext.RPCServerOption(spanCtx))
+			defer serverSpan.Finish()
+
+			res, duration, err := p.forwardRequest(req)
+
+			// Notify the client if there was an error while forwarding the request.
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadGateway)
+				return
+			}
+
+			// If the request was forwarded successfully, write the response back to
+			// the client.
+			p.writeResponse(w, res)
+
+			// Print request and response statistics.
+			p.printStats(req, res, duration)
+		}
+	}
+}
+
+func (p *Proxy) performOutboundRequest(req *http.Request) (*http.Response, time.Duration, error) {
+	httpClient := http.Client{}
+	destinationUrl := req.Header.Get("destination-ip")
+	newUrl := fmt.Sprintf("http://%s:%d%s", destinationUrl, servicePort, req.RequestURI)
+	newRequest, err := http.NewRequest(req.Method, newUrl, req.Body)
+	start := time.Now()
+	res, err := httpClient.Do(newRequest)
+	duration := time.Since(start)
+	return res, duration, err
 }
 
 func (p *Proxy) forwardRequest(req *http.Request) (*http.Response, time.Duration, error) {
@@ -45,7 +152,7 @@ func (p *Proxy) forwardRequest(req *http.Request) (*http.Response, time.Duration
 	httpClient := http.Client{}
 	proxyReq, err := http.NewRequest(req.Method, proxyUrl, req.Body)
 
-	// Capture the duration while making a request to the destination service.
+	// Capture the duration while making a request to the destination serviceA.
 	start := time.Now()
 	res, err := httpClient.Do(proxyReq)
 	duration := time.Since(start)
@@ -63,7 +170,7 @@ func (p *Proxy) writeResponse(w http.ResponseWriter, res *http.Response) {
 	// Set a special header to notify that the proxy actually serviced the request.
 	w.Header().Set("Server", "amazing-proxy")
 
-	// Set the status code returned by the destination service.
+	// Set the status code returned by the destination serviceA.
 	w.WriteHeader(res.StatusCode)
 
 	// Copy the contents from the response body.
@@ -82,5 +189,35 @@ func (p *Proxy) printStats(req *http.Request, res *http.Response, duration time.
 
 func main() {
 	// Listen on the predefined proxy port.
+	fmt.Println("Service started: " + os.Getenv(serviceName))
+	//initJaegerStuff()
 	http.ListenAndServe(fmt.Sprintf(":%d", proxyPort), &Proxy{})
+}
+
+func initJaegerStuff() {
+	cfg = jaegercfg.Configuration{
+		ServiceName: os.Getenv(serviceName),
+		Sampler:     &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter:    &jaegercfg.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+
+	jLogger := jaegerlog.StdLogger
+	jMetricsFactory := metrics.NullFactory
+
+	// Initialize tracer with a logger and a metrics factory
+	tracer, _, _ := cfg.NewTracer(
+		jaegercfg.Logger(jLogger),
+		jaegercfg.Metrics(jMetricsFactory),
+	)
+	// Set the singleton opentracing.Tracer with the Jaeger tracer.
+	opentracing.SetGlobalTracer(tracer)
+	//defer closer.Close()
+
+	tracer = opentracing.GlobalTracer()
+
 }

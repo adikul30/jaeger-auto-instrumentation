@@ -1,8 +1,14 @@
 # Use the Go v1.12 image for the base.
 FROM golang:1.12
 
+RUN mkdir /go/src/app
+WORKDIR /go/src/app
+
 # Copy the proxy code to the container.
-COPY main.go .
+COPY . .
+
+RUN go get ./
+RUN go build main.go
 
 # Run the proxy on container startup.
 ENTRYPOINT [ "go" ]

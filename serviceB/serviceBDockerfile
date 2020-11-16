@@ -15,4 +15,4 @@ ENTRYPOINT [ "go" ]
 CMD [ "run", "main.go" ]
 
 # Expose the proxy port.
-EXPOSE 8000
+EXPOSE 80

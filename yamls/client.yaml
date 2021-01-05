@@ -18,20 +18,20 @@ spec:
   #   image: kennethreitz/httpbin
   #   ports:
   #   - containerPort: 80
-  - name: service-a
+  - name: client
     image: adikul30/client-service
     env:
       - name: SVC_NAME
-        value: "svc-A"
-      - name: service-b-ip
-        value: "10.244.0.49"
+        value: "client"
+      - name: server-ip
+        value: "10.244.0.7"
     ports:
     - containerPort: 80
   - name: proxy
     image: adikul30/sidecar-proxy
     env:
       - name: SVC_NAME
-        value: "svc-A"
+        value: "client"
     ports:
     - containerPort: 8000
 

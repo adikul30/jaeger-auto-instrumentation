@@ -3,6 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="81992e73-8b7e-4bb6-bc86-fc46413fe374" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/init.sh" beforeDir="false" afterPath="$PROJECT_DIR$/init/init.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/serviceA/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/serviceA/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/delete.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/yamls/serviceA.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/yamls/serviceA.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,10 +53,12 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="0" y="23" key="SettingsEditor" timestamp="1605564928269">
-      <screen x="0" y="23" width="1440" height="809" />
+    <state x="0" y="25" key="SettingsEditor" timestamp="1606291206563">
+      <screen x="0" y="25" width="2560" height="1340" />
     </state>
     <state x="0" y="23" key="SettingsEditor/0.23.1440.809@0.23.1440.809" timestamp="1605564928269" />
     <state x="789" y="125" key="SettingsEditor/0.23.2560.1349@0.23.2560.1349" timestamp="1605486712993" />
+    <state x="0" y="25" key="SettingsEditor/0.25.1440.800@0.25.1440.800" timestamp="1606273305584" />
+    <state x="0" y="25" key="SettingsEditor/0.25.2560.1340@0.25.2560.1340" timestamp="1606291206563" />
   </component>
 </project>
